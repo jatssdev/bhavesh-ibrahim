@@ -200,6 +200,21 @@ app.get('/users', async (req, res) => {
     res.send(users)
 })
 
+app.post('/multipledata', async (req, res) => {
+    let data = req.body
+    data.map(async (user) => {
+        let newUSer = User({
+            name: user.name,
+            email: user.email,
+            password: user.password
+        })
+        await newUSer.save()
+    })
+
+    res.send('users stored')
+
+})
+
 app.post('/register', async (req, res) => {
     let newUser = User({
         name: req.body.name,
@@ -225,7 +240,7 @@ app.delete('/user/:id', async (req, res) => {
 
 app.put('/user/:id', async (req, res) => {
     let id = req.params.id
-    await User.findByIdAndUpdate(id, { name: req.body.name, email: req.body.email })
+    await User.findByIdAndUpdate(id, { name: req.body.name, email: req.body.email,password:req.body.password })
     res.send('user updated!')
 })
 
