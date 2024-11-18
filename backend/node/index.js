@@ -17,6 +17,7 @@ app.use(express.json())
 require('./conn')
 let User = require('./userModel')
 const { default: mongoose } = require('mongoose')
+let bcrypt = require('bcryptjs')
 // get,post,put,delete 
 
 app.get('/', (req, res) => {
@@ -216,19 +217,71 @@ app.post('/multipledata', async (req, res) => {
 })
 
 app.post('/register', async (req, res) => {
-    let newUser = User({
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password
-    })
+    // let newUser = User({
+    //     name: req.body.name,
+    //     email: req.body.email,
+    //     password: req.body.password
+    // })
 
-    let result = await newUser.save()
+    // let result = await newUser.save()
 
-    if (result) {
-        res.send('user registered!')
+    // if (result) {
+    //     res.send('user registered!')
 
-    } else {
-        res.send('Error :  database error ')
+    // } else {
+    //     res.send('Error :  database error ')
+    // }
+
+    let { name, email, password } = req.body
+    try {
+
+        let existingUser = await User.findOne({ email: email })
+        if (existingUser) throw 'user already exists!'
+        let hashedPassword = await bcrypt.hash(password, 10)
+
+        let newUser = new User({
+            email: email,
+            name: name,
+            password: hashedPassword
+        })
+        let result = await newUser.save()
+
+        if (!result) throw 'Database Error !'
+        res.send({
+            success: true, message: 'user registered successfully!', user: result
+        })
+    } catch (e) {
+        res.send({
+            success: false, message: 'Error : ' + e
+        })
+    }
+
+
+
+})
+
+app.post('/login', async (req, res) => {
+    let { email, password } = req.body
+    try {
+        // let user = await User.findOne({ email: email }).select('-name') --> select method to remove perticular key from values
+        let user = await User.findOne({ email: email })
+        if (!user) throw 'invalid Email Id!'
+        let isValidPassword = await bcrypt.compare(password, user.password)
+
+        if (!isValidPassword) throw 'Invalid password!'
+
+        let jsUser = user.toObject()
+
+        delete jsUser.password
+
+        res.send({
+            success: true, message: 'Login Success!', user: jsUser
+        })
+    } catch (e) {
+        res.send({
+            success: false, message: 'Error : ' + e
+        })
+
     }
 })
 
@@ -240,7 +293,7 @@ app.delete('/user/:id', async (req, res) => {
 
 app.put('/user/:id', async (req, res) => {
     let id = req.params.id
-    await User.findByIdAndUpdate(id, { name: req.body.name, email: req.body.email,password:req.body.password })
+    await User.findByIdAndUpdate(id, { name: req.body.name, email: req.body.email, password: req.body.password })
     res.send('user updated!')
 })
 
