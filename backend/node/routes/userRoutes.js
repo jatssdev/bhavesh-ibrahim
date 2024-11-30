@@ -1,6 +1,6 @@
 let express = require('express')
 const { userLogin, userRegister } = require('../controller/userController')
-const upload = require('../config/multer')
+const { upload } = require('../config/multer')
 
 
 
