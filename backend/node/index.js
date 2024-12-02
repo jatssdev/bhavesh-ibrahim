@@ -13,13 +13,17 @@ let express = require('express') //  same as --> import express from 'express'
 let cors = require('cors')
 let userRoutes = require('./routes/userRoutes')
 let app = express()
+let cookieParser = require('cookie-parser') // npm i cookie parser
 app.use(cors())
 app.use(express.json())
+app.use(cookieParser())
 require('./config/conn')
 app.use('/user', userRoutes)
 let User = require('./model/userModel')
 const { default: mongoose } = require('mongoose')
 let bcrypt = require('bcryptjs')
+let jwt = require('jsonwebtoken') // npm i jsonwebtoken
+const AUth = require('./middleware/auth')
 // get,post,put,delete 
 
 app.get('/', (req, res) => {
@@ -198,9 +202,21 @@ app.get('/products', (req, res) => {
     res.send(earbud)
 })
 
-app.get('/users', async (req, res) => {
-    let users = await User.find()
-    res.send(users)
+app.get('/users', AUth, async (req, res) => {
+
+    try {
+
+
+        let users = await User.find()
+        res.send(users)
+
+    } catch (e) {
+        res.send({
+            success: false,
+            message: e.message
+        })
+
+    }
 })
 
 app.post('/multipledata', async (req, res) => {

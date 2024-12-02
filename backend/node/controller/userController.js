@@ -1,5 +1,7 @@
 const User = require("../model/userModel")
 let bcrypt = require('bcryptjs')
+let jwt = require('jsonwebtoken')
+
 
 
 
@@ -17,6 +19,12 @@ let userLogin = async (req, res) => {
         let jsUser = user.toObject()
 
         delete jsUser.password
+
+        let token = jwt.sign({ id: jsUser._id }, 'codingcloud', { expiresIn: '10m' })
+
+        console.log(token);
+
+        res.cookie('token', token)
 
         res.send({
             success: true, message: 'Login Success!', user: jsUser
